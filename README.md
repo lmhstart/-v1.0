@@ -29,3 +29,5 @@
 **下载链接：** [https://wwtl.lanzoum.com/iuA8i2qrfobg](https://wwtl.lanzoum.com/iuA8i2qrfobg) (复制粘贴到浏览器打开，下载压缩包，运行 `dist-game.exe` 附件为详细规则)。
 
 **立刻开始挑战吧！ 💪**
+
+**敬请期待下一版本！！！**
