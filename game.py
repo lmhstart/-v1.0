@@ -80,7 +80,8 @@ character_files = {
     "胡桃": "hutao.gif",
     "蓝砚": "lanyan.gif",
     "魈": "xiao.gif",
-    "刻晴": "keqing.gif"
+    "刻晴": "keqing.gif",
+    "藤人": "hutao.gif"  # 暂时使用胡桃的图片作为藤人的图片
 }
 
 # 加载角色图片
@@ -115,7 +116,7 @@ for character, filename in character_files.items():
 # 加载背景音乐
 if audio_available:
     try:
-        pygame.mixer.music.load(resource_path(os.path.join("audio", "background.mp3")))
+        pygame.mixer.music.load(resource_path(os.path.join("sounds", "z8g15-g2l2u.wav")))
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)  # -1表示循环播放
     except pygame.error:
@@ -125,17 +126,31 @@ if audio_available:
 sound_effects = {}
 if audio_available:
     try:
-        sound_effects["clear"] = pygame.mixer.Sound(resource_path(os.path.join("audio", "clear.wav")))
-        sound_effects["drop"] = pygame.mixer.Sound(resource_path(os.path.join("audio", "drop.wav")))
-        sound_effects["rotate"] = pygame.mixer.Sound(resource_path(os.path.join("audio", "rotate.wav")))
-        sound_effects["game_over"] = pygame.mixer.Sound(resource_path(os.path.join("audio", "game_over.wav")))
+        # 使用背景音乐作为所有音效的替代
+        background_sound = pygame.mixer.Sound(resource_path(os.path.join("sounds", "z8g15-g2l2u.wav")))
+        # 设置较低的音量，避免与背景音乐冲突
+        background_sound.set_volume(0.2)
+        # 为所有音效使用同一个音频文件
+        sound_effects["clear"] = background_sound
+        sound_effects["drop"] = background_sound
+        sound_effects["rotate"] = background_sound
+        sound_effects["game_over"] = background_sound
+        print("成功加载音效")
     except pygame.error:
         print("警告: 无法加载音效")
 
 # 字体
-game_font = pygame.font.SysFont(None, 36)
-small_font = pygame.font.SysFont(None, 24)
-large_font = pygame.font.SysFont(None, 48)
+font_path = resource_path(os.path.join("fonts", "simhei.ttf"))
+try:
+    game_font = pygame.font.Font(font_path, 36)
+    small_font = pygame.font.Font(font_path, 24)
+    large_font = pygame.font.Font(font_path, 48)
+    print("成功加载中文字体")
+except pygame.error:
+    print("警告: 无法加载中文字体，使用系统默认字体")
+    game_font = pygame.font.SysFont(None, 36)
+    small_font = pygame.font.SysFont(None, 24)
+    large_font = pygame.font.SysFont(None, 48)
 
 # 游戏状态
 MENU = 0
@@ -150,32 +165,37 @@ menu_options = ["开始游戏", "角色选择", "退出"]
 selected_option = 0
 
 # 角色选择
-character_options = ["雷电将军", "钟离", "甘雨", "胡桃"]
+character_options = ["胡桃", "蓝砚", "魈", "刻晴", "藤人"]
 selected_character = 0
-current_character = "雷电将军"  # 默认角色
-opponent_character = "钟离"  # 默认对手角色
+current_character = "胡桃"  # 默认角色
+opponent_character = "蓝砚"  # 默认对手角色
 
 # 角色技能定义
 characters = {
-    "雷电将军": {
-        "skill_name": "雷罚恶曜之眼",
-        "skill_description": "消除场上随机3个方块，并对对手施加2个干扰方块",
-        "cooldown": 10
-    },
-    "钟离": {
-        "skill_name": "地心",
-        "skill_description": "将当前方块立即下落并消除下方一行方块",
-        "cooldown": 8
-    },
-    "甘雨": {
-        "skill_name": "冰莲",
-        "skill_description": "冻结对手场地3秒",
-        "cooldown": 12
-    },
     "胡桃": {
         "skill_name": "蝶引来生",
         "skill_description": "将场上所有同色方块变为当前方块颜色",
         "cooldown": 15
+    },
+    "蓝砚": {
+        "skill_name": "水月",
+        "skill_description": "将当前方块立即下落并消除下方一行方块",
+        "cooldown": 8
+    },
+    "魈": {
+        "skill_name": "靖妖傩舞",
+        "skill_description": "消除场上随机3个方块，并对对手施加2个干扰方块",
+        "cooldown": 10
+    },
+    "刻晴": {
+        "skill_name": "星斗归位",
+        "skill_description": "冻结对手场地3秒",
+        "cooldown": 12
+    },
+    "藤人": {
+        "skill_name": "草原核绽放",
+        "skill_description": "消除场上所有相邻的方块，并对对手施加3个干扰方块",
+        "cooldown": 12
     }
 }
 
