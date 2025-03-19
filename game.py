@@ -4,6 +4,7 @@ import time
 import os
 import pygame
 
+
 # 资源路径处理函数
 def resource_path(relative_path):
     """ 获取打包后资源的绝对路径 """
@@ -34,13 +35,13 @@ BLOCK_SIZE = 40
 GAME_AREA_WIDTH = 6  # 方块列数
 GAME_AREA_HEIGHT = 15  # 方块行数
 
-# 游戏区域位置
-GAME_AREA_X = 300
-GAME_AREA_Y = 50
+# 游戏区域位置 - 调整为图二的布局
+GAME_AREA_X = 350
+GAME_AREA_Y = 100
 
-# 对手游戏区域位置
+# 对手游戏区域位置 - 调整为图二的布局
 OPPONENT_AREA_X = 800
-OPPONENT_AREA_Y = 50
+OPPONENT_AREA_Y = 100
 
 # 颜色定义
 WHITE = (255, 255, 255)
@@ -245,14 +246,15 @@ def draw_text(text, font, color, x, y, center=False):
     screen.blit(text_surface, text_rect)
 
 
-def draw_ui_panel(x, y, width, height, border_color=UI_BORDER_COLOR, bg_color=UI_BG_COLOR):
+def draw_ui_panel(x, y, width, height):
     """绘制UI面板"""
-    # 创建半透明背景
+    # 创建半透明表面
     panel = pygame.Surface((width, height), pygame.SRCALPHA)
-    panel.fill(bg_color)
-    screen.blit(panel, (x, y))
+    panel.fill(UI_BG_COLOR)
     # 绘制边框
-    pygame.draw.rect(screen, border_color, (x, y, width, height), 2)
+    pygame.draw.rect(panel, UI_BORDER_COLOR, (0, 0, width, height), 2)
+    # 绘制到屏幕
+    screen.blit(panel, (x, y))
 
 
 def draw_menu():
@@ -261,16 +263,23 @@ def draw_menu():
     screen.blit(background, (0, 0))
 
     # 绘制标题
-    draw_text("原神八奇乱斗复刻版", large_font, GOLD, SCREEN_WIDTH // 2, 100, True)
+    title_text = large_font.render("原神八奇乱斗复刻版", True, GOLD)
+    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 150))
+    screen.blit(title_text, title_rect)
 
     # 绘制菜单选项
-    menu_y = 250
+    menu_y = 300
     for i, option in enumerate(menu_options):
         color = GOLD if i == selected_option else WHITE
-        draw_text(option, game_font, color, SCREEN_WIDTH // 2, menu_y + i * 60, True)
+        option_text = game_font.render(option, True, color)
+        option_rect = option_text.get_rect(center=(SCREEN_WIDTH // 2, menu_y))
+        screen.blit(option_text, option_rect)
+        menu_y += 70
 
-    # 绘制版权信息
-    draw_text("© 2023 原神八奇乱斗复刻版", small_font, WHITE, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50, True)
+    # 绘制操作提示
+    instruction_text = small_font.render("使用上下键选择，回车确认", True, WHITE)
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
+    screen.blit(instruction_text, instruction_rect)
 
 
 def draw_character_select():
@@ -279,51 +288,42 @@ def draw_character_select():
     screen.blit(background, (0, 0))
 
     # 绘制标题
-    draw_text("选择角色", large_font, GOLD, SCREEN_WIDTH // 2, 50, True)
+    title_text = large_font.render("选择角色", True, GOLD)
+    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 100))
+    screen.blit(title_text, title_rect)
 
     # 绘制角色选项
-    panel_width = 200
-    panel_height = 300
-    spacing = 50
-    total_width = len(character_options) * panel_width + (len(character_options) - 1) * spacing
-    start_x = (SCREEN_WIDTH - total_width) // 2
-
+    char_x = 200
     for i, character in enumerate(character_options):
-        panel_x = start_x + i * (panel_width + spacing)
-        panel_y = 150
-
-        # 设置面板颜色和边框
-        bg_color = UI_BG_COLOR
-        border_color = UI_BORDER_COLOR
-        if i == selected_character:
-            border_color = GOLD
-            # 添加高亮效果
-            highlight = pygame.Surface((panel_width + 10, panel_height + 10), pygame.SRCALPHA)
-            highlight.fill(UI_HIGHLIGHT_COLOR)
-            screen.blit(highlight, (panel_x - 5, panel_y - 5))
-
-        draw_ui_panel(panel_x, panel_y, panel_width, panel_height, border_color, bg_color)
-
         # 绘制角色图片
         char_img = character_images[character]
-        char_img_rect = char_img.get_rect(center=(panel_x + panel_width // 2, panel_y + 100))
-        screen.blit(char_img, char_img_rect)
+        char_rect = char_img.get_rect(center=(char_x, 300))
+        screen.blit(char_img, char_rect)
 
         # 绘制角色名称
-        draw_text(character, game_font, WHITE, panel_x + panel_width // 2, panel_y + 180, True)
+        color = GOLD if i == selected_character else WHITE
+        char_text = game_font.render(character, True, color)
+        char_text_rect = char_text.get_rect(center=(char_x, 400))
+        screen.blit(char_text, char_text_rect)
 
-        # 绘制技能名称
-        skill_name = characters[character]["skill_name"]
-        draw_text(skill_name, small_font, GOLD, panel_x + panel_width // 2, panel_y + 220, True)
+        # 绘制选择框
+        if i == selected_character:
+            pygame.draw.rect(screen, GOLD,
+                             (char_rect.x - 5, char_rect.y - 5, char_rect.width + 10, char_rect.height + 10), 2)
 
-        # 绘制技能描述（可能需要换行处理）
-        skill_desc = characters[character]["skill_description"]
-        draw_text(skill_desc, small_font, WHITE, panel_x + 10, panel_y + 250)
+        char_x += 200
 
-    # 绘制确认按钮
-    confirm_button_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, 550, 200, 50)
-    pygame.draw.rect(screen, GOLD, confirm_button_rect, 2)
-    draw_text("确认选择", game_font, WHITE, SCREEN_WIDTH // 2, 575, True)
+    # 绘制角色技能信息
+    selected_char = character_options[selected_character]
+    skill_name = characters[selected_char]["skill_name"]
+    skill_desc = characters[selected_char]["skill_description"]
+    draw_text(f"技能: {skill_name}", game_font, WHITE, SCREEN_WIDTH // 2 - 150, 500)
+    draw_text(f"效果: {skill_desc}", small_font, WHITE, SCREEN_WIDTH // 2 - 150, 550)
+
+    # 绘制操作提示
+    instruction_text = small_font.render("使用左右键选择，回车确认", True, WHITE)
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
+    screen.blit(instruction_text, instruction_rect)
 
 
 def draw_game():
@@ -341,50 +341,17 @@ def draw_game():
                                     GAME_AREA_WIDTH * BLOCK_SIZE + 10,
                                     GAME_AREA_HEIGHT * BLOCK_SIZE + 10), 2)
 
-    # 绘制玩家信息面板
-    player_panel_width = 250
-    player_panel_height = 200
-    draw_ui_panel(GAME_AREA_X - player_panel_width - 10, GAME_AREA_Y,
-                  player_panel_width, player_panel_height)
-
-    # 绘制玩家角色图片
+    # 绘制玩家角色图片 - 调整位置以符合图二
     player_char_img = character_images[current_character]
-    player_char_rect = player_char_img.get_rect(center=(GAME_AREA_X - player_panel_width // 2 - 10, GAME_AREA_Y + 60))
+    player_char_rect = player_char_img.get_rect(
+        center=(GAME_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE // 2, GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 60))
     screen.blit(player_char_img, player_char_rect)
 
-    # 绘制玩家信息
-    draw_text(f"玩家: {current_character}", game_font, WHITE, GAME_AREA_X - player_panel_width, GAME_AREA_Y + 120)
-    draw_text(f"分数: {score}", game_font, WHITE, GAME_AREA_X - player_panel_width, GAME_AREA_Y + 150)
-    draw_text(f"技能: {characters[current_character]['skill_name']}", small_font, GOLD,
-              GAME_AREA_X - player_panel_width, GAME_AREA_Y + 180)
-
-    # 绘制技能能量条
-    energy_bar_width = player_panel_width - 20
-    energy_bar_height = 20
-    energy_bar_x = GAME_AREA_X - player_panel_width - 10 + 10
-    energy_bar_y = GAME_AREA_Y + player_panel_height - 30
-    pygame.draw.rect(screen, GRAY, (energy_bar_x, energy_bar_y, energy_bar_width, energy_bar_height))
-    energy_width = int(energy_bar_width * (skill_energy / skill_max_energy))
-    pygame.draw.rect(screen, GOLD, (energy_bar_x, energy_bar_y, energy_width, energy_bar_height))
-    draw_text(f"{int(skill_energy)}%", small_font, WHITE, energy_bar_x + energy_bar_width // 2, energy_bar_y + 10, True)
-
-    # 绘制对手信息面板
-    opponent_panel_width = 250
-    opponent_panel_height = 200
-    draw_ui_panel(OPPONENT_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE + 10, GAME_AREA_Y,
-                  opponent_panel_width, opponent_panel_height)
-
-    # 绘制对手角色图片
+    # 绘制对手角色图片 - 调整位置以符合图二
     opponent_char_img = character_images[opponent_character]
     opponent_char_rect = opponent_char_img.get_rect(
-        center=(OPPONENT_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE + opponent_panel_width // 2 + 10, GAME_AREA_Y + 60))
+        center=(OPPONENT_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE // 2, GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 60))
     screen.blit(opponent_char_img, opponent_char_rect)
-
-    # 绘制对手信息
-    draw_text(f"对手: {opponent_character}", game_font, WHITE, OPPONENT_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE + 10,
-              GAME_AREA_Y + 120)
-    draw_text(f"分数: {opponent_score}", game_font, WHITE, OPPONENT_AREA_X + GAME_AREA_WIDTH * BLOCK_SIZE + 10,
-              GAME_AREA_Y + 150)
 
     # 绘制时间面板
     time_panel_width = 200
@@ -395,23 +362,32 @@ def draw_game():
     seconds = int(game_time) % 60
     draw_text(f"时间: {minutes:02d}:{seconds:02d}", game_font, WHITE, SCREEN_WIDTH // 2, GAME_AREA_Y - 35, True)
 
-    # 绘制速度面板
+    # 绘制技能信息 - 调整位置以符合图二
+    skill_text = f"技能: {characters[current_character]['skill_name']}"
+    draw_text(skill_text, small_font, GOLD, GAME_AREA_X, GAME_AREA_Y - 30)
+
+    # 绘制技能能量条 - 调整位置以符合图二
+    energy_bar_width = GAME_AREA_WIDTH * BLOCK_SIZE
+    energy_bar_height = 20
+    energy_bar_x = GAME_AREA_X
+    energy_bar_y = GAME_AREA_Y - 60
+    pygame.draw.rect(screen, GRAY, (energy_bar_x, energy_bar_y, energy_bar_width, energy_bar_height))
+    energy_width = int(energy_bar_width * (skill_energy / skill_max_energy))
+    pygame.draw.rect(screen, GOLD, (energy_bar_x, energy_bar_y, energy_width, energy_bar_height))
+    draw_text(f"{int(skill_energy)}%", small_font, WHITE, energy_bar_x + energy_bar_width // 2, energy_bar_y + 10, True)
+
+    # 绘制速度面板 - 调整位置以符合图二
     speed_panel_width = 200
     speed_panel_height = 50
-    draw_ui_panel(SCREEN_WIDTH // 2 - speed_panel_width // 2, GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 20,
+    draw_ui_panel(SCREEN_WIDTH // 2 - speed_panel_width // 2, GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 100,
                   speed_panel_width, speed_panel_height)
-    draw_text(f"速度: {current_speed_level}/4", game_font, WHITE, SCREEN_WIDTH // 2,
-              GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 45, True)
-    draw_text("按+/-调整速度", small_font, WHITE, SCREEN_WIDTH // 2,
-              GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 70, True)
-
-    # 绘制操作提示面板
-    controls_panel_width = 400
-    controls_panel_height = 50
-    draw_ui_panel(SCREEN_WIDTH // 2 - controls_panel_width // 2, GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 100,
-                  controls_panel_width, controls_panel_height)
-    draw_text("方向键移动，空格旋转", small_font, WHITE, SCREEN_WIDTH // 2,
+    draw_text(f"速度: {current_speed_level}/5", game_font, WHITE, SCREEN_WIDTH // 2,
               GAME_AREA_Y + GAME_AREA_HEIGHT * BLOCK_SIZE + 125, True)
+
+    # 绘制操作提示面板 - 调整位置以符合图二
+    controls_text = "A D 移动    W 旋转    S 加速下落    Space 立即下落"
+    draw_text(controls_text, small_font, WHITE, SCREEN_WIDTH // 2 - 200,
+              SCREEN_HEIGHT - 30)
 
     # 绘制网格中的方块
     for y in range(GAME_AREA_HEIGHT):
@@ -448,17 +424,58 @@ def draw_game_over():
     overlay.fill((0, 0, 0, 150))  # 半透明黑色
     screen.blit(overlay, (0, 0))
 
-    # 绘制游戏结束面板
-    panel_width = 400
-    panel_height = 300
-    panel_x = SCREEN_WIDTH // 2 - panel_width // 2
-    panel_y = SCREEN_HEIGHT // 2 - panel_height // 2
-    draw_ui_panel(panel_x, panel_y, panel_width, panel_height)
-
     # 绘制游戏结束文本
-    draw_text("你输了！", large_font, RED, SCREEN_WIDTH // 2, panel_y + 80, True)
-    draw_text(f"最终分数: {score}", game_font, WHITE, SCREEN_WIDTH // 2, panel_y + 150, True)
-    draw_text("按回车键返回主菜单", game_font, GOLD, SCREEN_WIDTH // 2, panel_y + 220, True)
+    game_over_text = large_font.render("游戏结束", True, GOLD)
+    game_over_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+    screen.blit(game_over_text, game_over_rect)
+
+    # 绘制分数
+    score_text = game_font.render(f"最终分数: {score}", True, WHITE)
+    score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20))
+    screen.blit(score_text, score_rect)
+
+    # 绘制操作提示
+    instruction_text = small_font.render("按回车键返回菜单", True, WHITE)
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 80))
+    screen.blit(instruction_text, instruction_rect)
+
+
+def find_connected(x, y, color, visited, connected):
+    """递归查找连接的相同颜色方块"""
+    # 检查边界
+    if x < 0 or x >= GAME_AREA_WIDTH or y < 0 or y >= GAME_AREA_HEIGHT:
+        return
+
+    # 检查是否已访问或颜色不匹配
+    if visited[y][x] or grid[y][x] != color:
+        return
+
+    # 标记为已访问并添加到连接列表
+    visited[y][x] = True
+    connected.append((x, y))
+
+    # 递归检查四个方向
+    find_connected(x + 1, y, color, visited, connected)
+    find_connected(x - 1, y, color, visited, connected)
+    find_connected(x, y + 1, color, visited, connected)
+    find_connected(x, y - 1, color, visited, connected)
+
+
+def clear_isolated_stones():
+    """清除没有相邻彩色方块的石头"""
+    for y in range(GAME_AREA_HEIGHT):
+        for x in range(GAME_AREA_WIDTH):
+            if stone_grid[y][x] is not None:
+                # 检查四个方向是否有彩色方块
+                has_adjacent_color = False
+                for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < GAME_AREA_WIDTH and 0 <= ny < GAME_AREA_HEIGHT and grid[ny][nx] is not None:
+                        has_adjacent_color = True
+                        break
+                # 如果没有相邻的彩色方块，清除石头
+                if not has_adjacent_color:
+                    stone_grid[y][x] = None
 
 
 def create_block_group():
@@ -572,6 +589,19 @@ def drop_floating_blocks():
                     grid[new_y][x] = grid[y][x]
                     grid[y][x] = None
 
+    # 修复：同样处理石头方块的下落
+    for x in range(GAME_AREA_WIDTH):
+        for y in range(GAME_AREA_HEIGHT - 2, -1, -1):
+            if stone_grid[y][x] is not None and stone_grid[y + 1][x] is None and grid[y + 1][x] is None:
+                # 找到最远可以下落的位置
+                new_y = y
+                while new_y + 1 < GAME_AREA_HEIGHT and grid[new_y + 1][x] is None and stone_grid[new_y + 1][x] is None:
+                    new_y += 1
+                # 移动石头方块
+                if new_y != y:
+                    stone_grid[new_y][x] = stone_grid[y][x]
+                    stone_grid[y][x] = None
+
 
 def check_clear():
     """检查并消除连接的相同颜色方块"""
@@ -600,72 +630,33 @@ def check_clear():
     return total_cleared
 
 
-def find_connected(x, y, color, visited, connected):
-    """递归找到所有连接的相同颜色方块"""
-    # 检查边界和已访问标记
-    if x < 0 or x >= GAME_AREA_WIDTH or y < 0 or y >= GAME_AREA_HEIGHT or visited[y][x]:
-        return
-    # 检查颜色是否匹配
-    if grid[y][x] != color:
-        return
-
-    # 标记为已访问并添加到连接列表
-    visited[y][x] = True
-    connected.append((x, y))
-
-    # 递归检查四个方向
-    find_connected(x + 1, y, color, visited, connected)  # 右
-    find_connected(x - 1, y, color, visited, connected)  # 左
-    find_connected(x, y + 1, color, visited, connected)  # 下
-    find_connected(x, y - 1, color, visited, connected)  # 上
-
-
-def clear_isolated_stones():
-    """清除没有相邻彩色方块的石头"""
-    for y in range(GAME_AREA_HEIGHT):
-        for x in range(GAME_AREA_WIDTH):
-            if stone_grid[y][x] is not None:
-                # 检查四个方向是否有彩色方块
-                has_adjacent_color = False
-                for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < GAME_AREA_WIDTH and 0 <= ny < GAME_AREA_HEIGHT and grid[ny][nx] is not None:
-                        has_adjacent_color = True
-                        break
-                # 如果没有相邻的彩色方块，清除这个石头
-                if not has_adjacent_color:
-                    stone_grid[y][x] = None
+def move_blocks(dx):
+    """移动方块组"""
+    new_blocks = [{"color": block["color"], "x": block["x"] + dx, "y": block["y"]} for block in current_blocks]
+    if not check_collision(new_blocks):
+        current_blocks[:] = new_blocks
 
 
 def create_interference_blocks(count):
     """创建干扰方块"""
     global interference_queue
-    interference_queue.extend([1] * count)
+    for _ in range(count):
+        interference_queue.append({"color": random.choice(["blue", "green", "purple", "yellow"])})
 
 
 def apply_interference_blocks():
-    """应用干扰方块到对手网格"""
+    """应用干扰方块"""
     global interference_queue, opponent_grid
     if not interference_queue:
         return
 
-    # 每次应用一个干扰方块
-    interference_queue.pop(0)
-
-    # 在对手网格顶部随机位置添加一个干扰方块
-    x = random.randint(0, GAME_AREA_WIDTH - 1)
-    # 将上方的方块向上移动
-    for y in range(1, GAME_AREA_HEIGHT):
-        opponent_grid[y - 1][x] = opponent_grid[y][x]
-    # 在底部添加干扰方块
-    opponent_grid[GAME_AREA_HEIGHT - 1][x] = random.choice(["blue", "green", "purple", "yellow"])
-
-
-def move_blocks(dx):
-    """水平移动方块组"""
-    new_blocks = [{"color": block["color"], "x": block["x"] + dx, "y": block["y"]} for block in current_blocks]
-    if not check_collision(new_blocks):
-        current_blocks[:] = new_blocks
+    # 找到可以放置干扰方块的位置
+    for x in range(GAME_AREA_WIDTH):
+        if opponent_grid[0][x] is None and opponent_stone_grid[0][x] is None:
+            # 放置干扰方块
+            if interference_queue:
+                block = interference_queue.pop(0)
+                opponent_grid[0][x] = block["color"]
 
 
 def drop_blocks():
@@ -786,21 +777,24 @@ def handle_character_select_input(event):
 
 def handle_game_input(event):
     """处理游戏输入"""
-    global current_speed_level, game_speed
+    global current_speed_level, game_speed, current_blocks
 
-    if event.key == pygame.K_LEFT:
+    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
         move_blocks(-1)
-    elif event.key == pygame.K_RIGHT:
+    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
         move_blocks(1)
-    elif event.key == pygame.K_DOWN:
-        # 加速下落
-        new_blocks = [{"color": block["color"], "x": block["x"], "y": block["y"] + 1} for block in current_blocks]
-        if not check_collision(new_blocks):
-            current_blocks = new_blocks
+    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+        # 修复：确保current_blocks已初始化
+        if current_blocks:
+            # 加速下落
+            new_blocks = [{"color": block["color"], "x": block["x"], "y": block["y"] + 1} for block in current_blocks]
+            if not check_collision(new_blocks):
+                current_blocks = new_blocks
     elif event.key == pygame.K_SPACE:
+        # 立即下落
+        drop_blocks()
+    elif event.key == pygame.K_w:
         rotate_blocks()
-    elif event.key == pygame.K_s:
-        use_skill()
     elif event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
         # 增加速度
         current_speed_level = min(current_speed_level + 1, len(speed_levels))
@@ -852,11 +846,30 @@ def start_game():
 
 def update_opponent():
     """更新对手状态（AI行为）"""
-    global opponent_score
+    global opponent_score, opponent_grid, opponent_stone_grid
 
     # 优化AI：降低得分概率和数值，使游戏更平衡
     if random.random() < 0.01:  # 降低概率从5%到1%
         opponent_score += random.randint(1, 5)  # 降低得分范围从1-10到1-5
+
+    # 修复：模拟对手方块下落和操作
+    # 随机生成对手方块
+    if random.random() < 0.05:  # 5%的概率生成新方块
+        colors = ["blue", "green", "purple", "yellow"]
+        x = random.randint(0, GAME_AREA_WIDTH - 1)
+        y = random.randint(0, GAME_AREA_HEIGHT // 2)  # 在上半部分生成
+
+        # 确保位置为空
+        if opponent_grid[y][x] is None and opponent_stone_grid[y][x] is None:
+            opponent_grid[y][x] = random.choice(colors)
+
+    # 模拟对手方块下落
+    for x in range(GAME_AREA_WIDTH):
+        for y in range(GAME_AREA_HEIGHT - 2, -1, -1):
+            if opponent_grid[y][x] is not None and opponent_grid[y + 1][x] is None and opponent_stone_grid[y + 1][
+                x] is None:
+                opponent_grid[y + 1][x] = opponent_grid[y][x]
+                opponent_grid[y][x] = None
 
 
 def main():
@@ -916,17 +929,27 @@ def main():
 
             # 方块下落
             if current_time - last_drop_time > 1.0 / game_speed:
-                new_blocks = [{"color": block["color"], "x": block["x"], "y": block["y"] + 1} for block in current_blocks]
-                if check_collision(new_blocks):
-                    place_blocks(current_blocks)
-                    current_blocks = create_block_group()
-                    # 修改：只有当新方块完全进入游戏区域后才检查碰撞
-                    all_blocks_visible = all(block["y"] >= 0 for block in current_blocks)
-                    if all_blocks_visible and check_collision(current_blocks):
-                        current_state = GAME_OVER
+                # 确保current_blocks已初始化
+                if current_blocks:
+                    new_blocks = [{"color": block["color"], "x": block["x"], "y": block["y"] + 1} for block in
+                                  current_blocks]
+                    if check_collision(new_blocks):
+                        place_blocks(current_blocks)
+                        current_blocks = create_block_group()
+                        # 修改：只有当新方块完全进入游戏区域后才检查碰撞
+                        all_blocks_visible = all(block["y"] >= 0 for block in current_blocks)
+                        if all_blocks_visible and check_collision(current_blocks):
+                            current_state = GAME_OVER
+                    else:
+                        current_blocks = new_blocks
                 else:
-                    current_blocks = new_blocks
+                    # 如果current_blocks为空，创建新的方块组
+                    current_blocks = create_block_group()
+
                 last_drop_time = current_time
+
+                # 修复：处理石头方块的下落
+                drop_floating_blocks()
 
             # 检查游戏是否结束
             if check_game_over():
